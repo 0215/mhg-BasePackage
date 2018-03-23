@@ -1,0 +1,90 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>多文件上传</title>
+    
+    <script type="text/javascript">
+        function fileSelected() {
+            var files = document.getElementById('fileToUpload').files;
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                if (file) {
+                    var fileSize = 0;
+                    if (file.size > 1024 * 1024)
+                        fileSize = (Math.round(file.size * 100 / (1024 * 1024)) / 100).toString() + 'MB';
+                    else
+                        fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
+
+                    document.getElementById('fileName').innerHTML += '文件名'+i+': ' + file.name+' ';
+                    document.getElementById('fileSize').innerHTML += '大小' + i + ': ' + fileSize + ' ';
+                    document.getElementById('fileType').innerHTML += '类型' + i + ': ' + file.type + ' ';
+                }
+            }
+            
+        }
+
+        function uploadFile() {
+            var files = document.getElementById('fileToUpload').files;
+            for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                if (!file) { continue; }
+                var fd = new FormData();
+                fd.append("fileToUpload", file);
+                var xhr = new XMLHttpRequest();
+                xhr.upload.addEventListener("progress", uploadProgress, false);
+                xhr.addEventListener("load", uploadComplete, false);
+                xhr.addEventListener("error", uploadFailed, false);
+                xhr.addEventListener("abort", uploadCanceled, false);
+                xhr.open("POST", "/Home/Upload");
+                xhr.send(fd);
+            }
+        }
+
+        function uploadProgress(evt) {
+            if (evt.lengthComputable) {
+                var percentComplete = Math.round(evt.loaded * 100 / evt.total);
+                document.getElementById('progressNumber').innerHTML = percentComplete.toString() + '%';
+            }
+            else {
+                document.getElementById('progressNumber').innerHTML = 'unable to compute';
+            }
+        }
+
+        function uploadComplete(evt) {
+            /* This event is raised when the server send back a response */
+            document.getElementById('result').innerHTML +=evt.target.responseText+"<br />";
+        }
+
+        function uploadFailed(evt) {
+            alert("There was an error attempting to upload the file.");
+        }
+
+        function uploadCanceled(evt) {
+            alert("The upload has been canceled by the user or the browser dropped the connection.");
+        }
+    </script>
+</head>
+<body>
+    <h1>多文件上传</h1>
+    <form id="form1" enctype="multipart/form-data" method="post" action="/Home/Upload">
+    <div class="row">
+      <label for="fileToUpload">选择多个文件上传</label><br />
+      <input type="file" name="fileToUpload" id="fileToUpload" onchange="fileSelected();"  multiple="multiple"/>
+    </div>
+    <div id="fileName"></div>
+    <div id="fileSize"></div>
+    <div id="fileType"></div>
+    <div class="row">
+      <input type="button" onclick="uploadFile()" value="Upload" />
+    </div> 
+    <div id="progressNumber"></div>
+        <hr />
+        <div id="result"></div>
+  </form>
+</body>
+</html> 
